@@ -1,4 +1,4 @@
-import { Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 import firebase from 'firebase';
 import { Facebook } from '@ionic-native/facebook';
 
@@ -7,14 +7,8 @@ export class Messages {
   public user: any = {}
 
   constructor(public fabebook: Facebook) {
-     if (this.user.id == null) {
       this.getUser()
-    }
   }
-
-  /* ngOnInit(){
-    this.getUser()
-  } */
 
 
   getUser() {
@@ -50,14 +44,45 @@ export class Messages {
     })
   }
 
+  delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // esse metodo vai repetir o loop até o id aparecer...
+  // podemos tratar quando der erro na rede esse loop vai ser infinito
+  //a solução é dexiar um limite de tentativas
+  getUserData() {
+    var limit = 10;// 10 tentativas
+    return new Promise<any>((success, fail) => {
+
+      let loop: () => void = () => {
+        setTimeout(() => {
+          if (this.user.id)
+            success(this.user);
+          else if(limit--) // no typescript 0 é a mesma coisa que "false", enquanto for maior faz o loop
+            loop();// esse "--" faz o decremento da variavel
+          else
+            fail('timeout');
+        }, 300);
+      }
+    });
+  }
 
   getMessage(successCallback) {
-    this.user.id = 1678238025542655
-    let ref = firebase.database().ref('messages').child(this.user.id)
-    ref.orderByChild('read').equalTo(false).on('child_added', (snapshot) => {
-      let message = snapshot.val()
-      successCallback(message)
-    })
+    this.getUserData().then(
+      (userData) => {
+
+        //this.user.id = 1678238025542655 // setando manual
+        console.log('getMessage ' + this.user.id)
+        let ref = firebase.database().ref('messages').child(this.user.id)
+        ref.orderByChild('read').equalTo(false).on('child_added', (snapshot) => {
+          let message = snapshot.val()
+          successCallback(message)
+        })
+      },
+    (error) => {
+      console.log(error);//timeout
+    });
   }
 
 }
