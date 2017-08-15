@@ -1,0 +1,16 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>
+      Home
+    </ion-title>
+    <button menuToggle ion-button><ion-icon name="menu"></ion-icon></button>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
+  <ion-card>
+    <ion-list *ngFor="let message of messagesList">
+      {{message.address}}
+    </ion-list>
+  </ion-card>
+</ion-content>
